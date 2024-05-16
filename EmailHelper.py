@@ -27,4 +27,3 @@ def read_email():
     print(inbox)
 
 read_email()
-print("hooray")
