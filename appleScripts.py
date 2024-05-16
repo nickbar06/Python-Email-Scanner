@@ -6,7 +6,7 @@ tell application "Mail"
 	set theMessages to messages of theMailbox
 	
 	set messageCount to count of theMessages
-	set maxMessages to 10
+	set maxMessages to 1
 	
 	if messageCount < maxMessages then
 		set maxMessages to messageCount
@@ -18,6 +18,7 @@ tell application "Mail"
 		set messageInfo to messageInfo & "Sender: " & (sender of theMessage as rich text) & return
 		set messageInfo to messageInfo & "Subject: " & (subject of theMessage as rich text) & return
 		set messageInfo to messageInfo & "Date Sent: " & (date sent of theMessage as rich text) & return
+        set messageInfo to messageInfo & "Message ID: " & (message id of theMessage as text) & return
 		set messageInfo to messageInfo & "Content: " & (content of theMessage as rich text) & return
 		set messageInfo to messageInfo & "----------------------------------" & return
 		set output to output & messageInfo
