@@ -20,7 +20,6 @@ tell application "Mail"
 		set messageInfo to messageInfo & "Date Sent: " & (date sent of theMessage as rich text) & return
         set messageInfo to messageInfo & "Message ID: " & (message id of theMessage as text) & return
 		set messageInfo to messageInfo & "Content: " & (content of theMessage as rich text) & return
-		set messageInfo to messageInfo & "----------------------------------" & return
 		set output to output & messageInfo
 	end repeat
 end tell

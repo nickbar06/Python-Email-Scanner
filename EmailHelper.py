@@ -27,116 +27,80 @@ def send_email(to_address):
     mailserver.sendmail(sender, to_address, msg.as_string())
     mailserver.quit()
 
-def parse_email_data(data):
-    emails = {}
-    email_blocks = data.strip().split("\n----------------------------------\n")
-    
-    for block in email_blocks:
-        lines = block.strip().split("\n")
-        sender = subject = date_sent = message_id = None
-        content_lines = []
+# Print the formatted output
         
-        for line in lines:
-            if line.startswith("Sender: "):
-                sender = line[len("Sender: "):].strip()
-            elif line.startswith("Subject: "):
-                subject = line[len("Subject: "):].strip()
-            elif line.startswith("Date Sent: "):
-                date_sent = line[len("Date Sent: "):].strip()
-            elif line.startswith("Message ID: "):
-                message_id = line[len("Message ID: "):].strip()
-            elif line.startswith("Content: "):
-                content = line[len("Content: "):].strip()
-                content_lines = [content]
-            else:
-                content_lines.append(line)
+email_data = """Sender: Opium Father <jaypearce1915@gmail.com>
+Subject: Re: Order1347
+Date Sent: Thursday, May 16, 2024 at 5:35:17\u202fPM
+Message ID: 0B30BFED-4655-4AEF-9540-D8B745C5C772@gmail.com
+Content: Okay thank you for clarifying and for your speedy response. 
+Sent from my iPhone
+
+On May 16, 2024, at 2:18\u202fPM, Nicolas Barrionuevo <nick@midnightinshibuya.com> wrote:
+
+\ufeffHello Jay,
+
+The problem was on my end, I printed a label on my end with the incorrect package dimensions which caused the label to get rejected for insufficient \xa0postage and your package was returned to me. So I had to rebuy a new label with the correct dimensions for the package and resend it.
+
+Nico @ MIS
+
+On May 16, 2024, at 5:15\u202fPM, Opium Father <jaypearce1915@gmail.com> wrote:
+
+Hey nick im curious as to what the postage issue was? Was it something on my end? I noticed the tracking has changed and I’m not sure as to what the problem is. If you could help me clarify this that would be awesome
+Sent from my iPhone
+"""
+
+# Define a function to extract email components
+def extract_email_components(email_data):
+    pattern = re.compile(r'\nOn .+? wrote:\n')
+    matches = list(pattern.finditer(email_data))
+
+    # Add the indices of the start and end of each part
+    indices = [0] + [match.start() for match in matches] + [len(email_data)]
+    email_components = []
+    
+    # Process the first part
+    first_part = email_data[indices[0]:indices[1]]
+    sender_match = re.search(r'Sender: (.+)', first_part)
+    subject_match = re.search(r'Subject: (.+)', first_part)
+    content_match = re.search(r'Content: (.+)', first_part, re.DOTALL)
+    
+    sender = sender_match.group(1).strip() if sender_match else ""
+    subject = subject_match.group(1).strip() if subject_match else ""
+    content = content_match.group(1).strip() if content_match else ""
+    
+    email_components.append((sender, subject, content))
+    
+    # Process the remaining parts with the main subject from the first message
+    for i in range(1, len(indices) - 1):
+        part = email_data[indices[i]:indices[i + 1]]
+        sender_match = re.search(r'([\w\s]+ <[\w\.]+@[\w\.]+\.[a-zA-Z]+>)', part)
+        content_match = re.search(r'wrote:\n(.+)', part, re.DOTALL)
         
-        if message_id and sender and subject and date_sent:
-            content = "\n".join(content_lines)
-            # Parse the content into individual replies
-            replies = parse_replies(content)
-            for i, reply_content in enumerate(replies):
-                reply_id = f"{message_id}-{i+1}"
-                print(reply_id)
-                if i == 0:
-                    email_node = EmailNode(reply_id, sender, subject, date_sent, reply_content)
-                else:
-                    pattern = re.compile(r"On (.*?) at (.*?), (.*?) <(.*?)> wrote:")
-                    match = pattern.search(reply_content)
-                    cleaned_data = pattern.sub("", reply_content)
-
-
-                    if match:
-                        date = match.group(1)
-                        sendername = match.group(3)
-                        senderaddress = match.group(4)
-                    else:
-                        raise ValueError("The provided string does not match the expected format.")
-                    
-                    email_node = EmailNode(reply_id, sendername + " <" + senderaddress + ">", subject, date, cleaned_data)
-                emails[reply_id] = email_node
+        sender = sender_match.group(1).strip() if sender_match else ""
+        content = content_match.group(1).strip() if content_match else ""
+        
+        email_components.append((sender, subject, content))
     
-    return emails
+    return email_components
 
-def parse_replies(data):
-    messages = []
-    # Use regular expressions to find the positions of "> wrote:"
-    pattern = re.compile(r"On .*? wrote:")
-    positions = [match.start() for match in pattern.finditer(data)]
-    
-    # Append the end of the data to the positions list
-    positions.append(len(data))
-    
-    # Extract messages based on the positions
-    start = 0
-    for pos in positions:
-        if start < pos:
-            message = data[start:pos].strip()
-            if message:
-                messages.append(message)
-        start = pos
-    
-    return messages
+# Get the email components
+emails = extract_email_components(email_data)
 
-def link_emails(emails):
-    pattern = re.compile(r"> wrote:")
-    email_list = list(emails.values())
-    
-    for email in email_list:
-        lines = email.content.split("\n")
-        reply_content = []
-        for line in lines:
-            if pattern.search(line):
-                if reply_content:
-                    reply_message = "\n".join(reply_content).strip()
-                    for potential_reply in email_list:
-                        if potential_reply.content.strip() == reply_message:
-                            potential_reply.replies.append(email)
-                            break
-                    reply_content = []
-            else:
-                reply_content.append(line)
-                
-    return emails
+# Format the output
+def format_emails(emails):
+    output = ""
+    indent = ""
+    for i, email in enumerate(emails[::-1]):
+        sender, subject, content = email
+        truncated_content = content + "..." if len(content) > 47 else content
+        output += f"{indent}Sender: {sender}\n"
+        output += f"{indent}Subject: {subject}\n"
+        output += f"{indent}Content: {truncated_content}\n"
+        output += f"{indent}Replies: {1 if i < len(emails) - 1 else 0}\n"
+        indent += "    "
+    return output
 
-def print_linked_emails(emails):
-    def print_email(email, indent=0):
-        print(" " * indent + f"Sender: {email.sender}")
-        print(" " * indent + f"Subject: {email.subject}")
-        print(" " * indent + f"Date Sent: {email.date_sent}")
-        print(" " * indent + f"Content: {email.content}")  # Print a snippet of the content for brevity
-        print(" " * indent + f"Replies: {len(email.replies)}")
-        print("")
-        for reply in email.replies:
-            print_email(reply, indent + 4)
-
-    for email in emails.values():
-        if not any(email in e.replies for e in emails.values()):  # Find top-level emails (not replies)
-            print_email(email)
-
-email_data = run_script(read_emails)
-# print(email_data)
-
-emails = parse_email_data(email_data)
-linked_emails = link_emails(emails)
-print_linked_emails(linked_emails)
+# Print the formatted output
+formatted_output = format_emails(emails)
+print(formatted_output)
