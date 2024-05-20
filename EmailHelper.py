@@ -27,28 +27,7 @@ def send_email(to_address):
     mailserver.sendmail(sender, to_address, msg.as_string())
     mailserver.quit()
 
-# Print the formatted output
-        
-email_data = """Sender: Opium Father <jaypearce1915@gmail.com>
-Subject: Re: Order1347
-Date Sent: Thursday, May 16, 2024 at 5:35:17\u202fPM
-Message ID: 0B30BFED-4655-4AEF-9540-D8B745C5C772@gmail.com
-Content: Okay thank you for clarifying and for your speedy response. 
-Sent from my iPhone
-
-On May 16, 2024, at 2:18\u202fPM, Nicolas Barrionuevo <nick@midnightinshibuya.com> wrote:
-
-\ufeffHello Jay,
-
-The problem was on my end, I printed a label on my end with the incorrect package dimensions which caused the label to get rejected for insufficient \xa0postage and your package was returned to me. So I had to rebuy a new label with the correct dimensions for the package and resend it.
-
-Nico @ MIS
-
-On May 16, 2024, at 5:15\u202fPM, Opium Father <jaypearce1915@gmail.com> wrote:
-
-Hey nick im curious as to what the postage issue was? Was it something on my end? I noticed the tracking has changed and I’m not sure as to what the problem is. If you could help me clarify this that would be awesome
-Sent from my iPhone
-"""
+email_data = run_script(read_emails)
 
 # Define a function to extract email components
 def extract_email_components(email_data):
